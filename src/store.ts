@@ -1,19 +1,33 @@
 import { create } from "zustand";
-import { Product, ShoppingCart } from "./schemas";
+import { Coupon, CouponResponseSchema, Product, ShoppingCart } from "./schemas";
 import { devtools } from "zustand/middleware";
 
 interface Store {
   total: number,
+  discount: number,
   contents: ShoppingCart,
+  coupon: Coupon,
   addToCard: (product: Product) => void,
   updateQuantity: (id: Product['id'], quantity: number) => void,
   removeFromCart: (id: Product['id']) => void,
   calculateTotal: () => void
   applyCoupon: (couponName: string) => Promise<void>
+  applyDiscount: () => void
+  clearOrder: () => void
+}
+
+const initialState = {
+  total: 0,
+  discount: 0,
+  coupon: {
+    percentage: 0,
+    name: '',
+    message: ''
+  },
 }
 
 export const useStore = create<Store>()(devtools((set, get) => ({
-  total: 0,
+  ...initialState,
   contents: [],
   addToCard: (product) => {
     const { id: productId, ...data } = product
@@ -50,6 +64,9 @@ export const useStore = create<Store>()(devtools((set, get) => ({
     set(() => ({
       contents
     }))
+    if (!get().contents.length) {
+      get().clearOrder();
+    }
     get().calculateTotal();
   },
   calculateTotal: () => {
@@ -57,6 +74,9 @@ export const useStore = create<Store>()(devtools((set, get) => ({
     set(() => ({
       total
     }))
+    if (get().coupon.percentage) {
+      get().applyDiscount()
+    }
   },
   applyCoupon: async (couponName) => {
     const req = await fetch('/coupons/api', {
@@ -66,6 +86,26 @@ export const useStore = create<Store>()(devtools((set, get) => ({
       })
     })
     const json = await req.json()
-    console.log(json);
+    const coupon = CouponResponseSchema.parse(json)
+    set(() => ({
+      coupon,
+    }))
+    if (coupon.percentage) {
+      get().applyDiscount();
+    }
+  },
+  applyDiscount: () => {
+    const subTotalAmount = get().contents.reduce((total, item) => total + (item.quantity * item.price), 0)
+    const discount = (get().coupon.percentage/100)*subTotalAmount;
+    const total = subTotalAmount - discount;
+    set(() => ({
+      total,
+      discount
+    }))
+  },
+  clearOrder: () => {
+    set(() => ({
+      ...initialState,
+    }))
   }
 })))
