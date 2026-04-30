@@ -24,11 +24,11 @@ const initialState = {
     name: '',
     message: ''
   },
+  contents: [],
 }
 
 export const useStore = create<Store>()(devtools((set, get) => ({
   ...initialState,
-  contents: [],
   addToCard: (product) => {
     const { id: productId, ...data } = product
     let contents: ShoppingCart = []
