@@ -22,6 +22,7 @@ export default function TransactionSummary({transaction}: {transaction: Transact
                     alt={`Imagen de Product: ${item.product.name}`}
                     className="absolute"
                     fill
+                    unoptimized
                   />
                 </div>
                 <div className="flex-auto space-y-1 ">
