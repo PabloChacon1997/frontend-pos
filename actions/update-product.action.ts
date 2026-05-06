@@ -11,6 +11,7 @@ export async function updateProduct(productId: Product['id'], prevSate: ActionSt
   const product = ProductFormSchema.safeParse({
     name: formData.get('name'),
     price: formData.get('price'),
+    image: formData.get('image'),
     inventory: formData.get('inventory'),
     categoryId: formData.get('categoryId'),
   });

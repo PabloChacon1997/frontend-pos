@@ -1,19 +1,22 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { useDropzone } from "react-dropzone"
 
 import { uploadImage } from "@/actions/upload-image.action"
+import Image from "next/image"
+import { getImagePath } from "@/src/utils"
 
 
-export default function UploadProductImage() {
+export default function UploadProductImage({currentImage}: {currentImage?: string}) {
+  const [image, setImage] = useState('')
   const onDrop = useCallback(async (files: File[]) => {
     const formData = new FormData()
     files.forEach(file => {
       formData.append('file', file);
     })
     const image = await uploadImage(formData)
-    console.log(image);
+    setImage(image);
   }, [])
   const { getRootProps, getInputProps, isDragActive, isDragReject, isDragAccept } = useDropzone({
     accept: {
@@ -41,6 +44,44 @@ export default function UploadProductImage() {
             {!isDragActive && (<p>Arrastra y suelta una imagen aquí</p>)}
           </div>
         </div>
+        {
+          image && (
+            <div className="py-5 space-y-5">
+              <p className="font-bold">Imagen Producto</p>
+              <div className="w-90 h-105 relative">
+                <Image
+                  src={image}
+                  alt="Imagen Publicada"
+                  className="object-cover"
+                  fill
+                />
+              </div>
+            </div>
+          )
+        }
+
+        {
+          currentImage && !image && (
+            <div className="py-5 space-y-5">
+              <p className="font-bold">Imagen Actual</p>
+              <div className="w-90 h-105 relative">
+                <Image
+                  src={getImagePath(currentImage)}
+                  alt="Imagen Publicada"
+                  className="object-cover"
+                  fill
+                  unoptimized
+                />
+              </div>
+            </div>
+          )
+        }
+
+        <input 
+          type="hidden"
+          name="image"
+          defaultValue={image ? image: currentImage}
+        />
     </>
   )
 }
